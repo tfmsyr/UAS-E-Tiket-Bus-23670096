@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFF1BA0E2), 
         scaffoldBackgroundColor: const Color(0xFFF5F6FA), 
         useMaterial3: true,
-        //y
+        
         
         
         colorScheme: ColorScheme.fromSeed(
