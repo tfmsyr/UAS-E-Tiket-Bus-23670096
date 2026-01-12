@@ -23,8 +23,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     _refreshData();
   }
 
+  // --- LOGIC: Fetch Data dari Database ---
   Future<void> _refreshData() async {
     setState(() => _isLoading = true);
+    // Mengambil data bus dan booking dari database lokal
     final dataBus = await DatabaseHelper.instance.readAllBuses();
     final dataOrder = await DatabaseHelper.instance.getAllBookings();
 
@@ -37,6 +39,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     }
   }
 
+  // --- LOGIC: Format Mata Uang (Rupiah) ---
   String _formatCurrency(double price) {
     String priceStr = price.toStringAsFixed(0);
     String result = '';
@@ -52,6 +55,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return 'Rp $result';
   }
 
+  // --- LOGIC: Logout & Delete ---
   void _logout() {
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const LoginScreen()));
@@ -71,14 +75,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      drawer: _buildDrawer(),
+      drawer: _buildDrawer(), // Menu Samping
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                // HEADER
+                // --- 1. HEADER (Gradient Background) ---
                 Container(
-                  height: 260, 
+                  height: 260,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Color(0xFF0288D1), Color(0xFF4FC3F7)],
@@ -99,7 +103,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   ),
                 ),
 
-                // 2. KONTEN UTAMA
+                // --- 2. KONTEN UTAMA (Scrollable) ---
                 SafeArea(
                   child: RefreshIndicator(
                     onRefresh: _refreshData,
@@ -109,6 +113,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header Dashboard (Judul & Logout)
                           Padding(
                             padding: const EdgeInsets.only(top: 15, bottom: 20),
                             child: Row(
@@ -139,6 +144,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                             ),
                           ),
 
+                          // Teks Selamat Datang
                           Padding(
                             padding: const EdgeInsets.only(left: 5),
                             child: Column(
@@ -163,6 +169,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
                           const SizedBox(height: 35),
 
+                          // Kartu Statistik (Total Armada & Pesanan)
                           Row(
                             children: [
                               Expanded(
@@ -197,6 +204,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
                           const SizedBox(height: 30),
 
+                          // Header List Bus
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 5),
                             child: Row(
@@ -231,6 +239,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
                           const SizedBox(height: 20),
 
+                          // List Bus (Daftar Kartu)
                           _buses.isEmpty
                               ? _buildEmptyState()
                               : ListView.builder(
@@ -243,7 +252,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                                   },
                                 ),
 
-                          const SizedBox(height: 100), 
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
@@ -252,6 +261,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               ],
             ),
 
+      // Tombol Tambah Bus (+)
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(context,
@@ -270,6 +280,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  // --- WIDGET: Kartu Statistik Kecil ---
   Widget _buildStatCard({
     required IconData icon,
     required Color color,
@@ -285,9 +296,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            const BoxShadow(
-              color: Color.fromRGBO(158, 158, 158, 0.08), 
+          boxShadow: const [
+            BoxShadow(
+              color: Color.fromRGBO(158, 158, 158, 0.08),
               blurRadius: 20,
               spreadRadius: 2,
               offset: Offset(0, 8),
@@ -302,7 +313,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: color.withAlpha(26), 
+                    color: color.withAlpha(26),
                   ),
                   child: Icon(icon, color: color, size: 32),
                 ),
@@ -344,20 +355,20 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  // --- WIDGET: Kartu Detail Bus ---
   Widget _buildBusCard(Bus bus) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Colors.white, Color(0xFFE3F2FD)], 
+          colors: [Colors.white, Color(0xFFE3F2FD)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: const [
           BoxShadow(
-            color: Color.fromRGBO(33, 150, 243, 0.1), 
+            color: Color.fromRGBO(33, 150, 243, 0.1),
             blurRadius: 15,
             offset: Offset(0, 8),
           ),
@@ -370,13 +381,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-               
                 Expanded(
                   flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -396,10 +405,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 10),
-
-                      // Rute
                       Text(
                         bus.rute,
                         style: TextStyle(
@@ -408,10 +414,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Harga
                       const Text(
                         "Tarif",
                         style: TextStyle(
@@ -436,10 +439,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 8),
-
-                      // Info Kursi
                       Row(
                         children: [
                           const Icon(Icons.event_seat,
@@ -457,7 +457,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ],
                   ),
                 ),
-
                 Expanded(
                   flex: 2,
                   child: SizedBox(
@@ -465,19 +464,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Lingkaran Hiasan
                         Positioned(
                           right: 0,
                           child: Container(
                             width: 100,
                             height: 100,
                             decoration: const BoxDecoration(
-                              color: Color.fromRGBO(68, 138, 255, 0.05), // Replaced withOpacity (BlueAccent)
+                              color: Color.fromRGBO(68, 138, 255, 0.05),
                               shape: BoxShape.circle,
                             ),
                           ),
                         ),
-
                         const Positioned(
                           right: 10,
                           child: Icon(
@@ -493,7 +490,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               ],
             ),
           ),
-
           Positioned(
             top: 5,
             right: 0,
@@ -537,6 +533,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  // --- WIDGET: Drawer (Menu Samping) ---
   Widget _buildDrawer() {
     return Drawer(
       child: Column(
@@ -558,8 +555,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                        color: Color.fromRGBO(0, 0, 0, 0.1), // Replaced withOpacity
-                        blurRadius: 10)
+                        color: Color.fromRGBO(0, 0, 0, 0.1), blurRadius: 10)
                   ]),
               child: const Icon(Icons.person_rounded,
                   size: 45, color: Color(0xFF0288D1)),
@@ -567,8 +563,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
           const SizedBox(height: 10),
           ListTile(
-            leading:
-                const Icon(Icons.dashboard_rounded, color: Colors.blue, size: 28),
+            leading: const Icon(Icons.dashboard_rounded,
+                color: Colors.blue, size: 28),
             title: const Text('Dashboard',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             onTap: () => Navigator.pop(context),
@@ -617,6 +613,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  // --- WIDGET: Tampilan Saat Kosong ---
   Widget _buildEmptyState() {
     return Container(
       padding: const EdgeInsets.only(top: 60),

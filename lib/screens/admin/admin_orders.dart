@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart'; // [BARU] Import intl
+import 'package:intl/intl.dart'; 
 import '../../database/db_helper.dart';
 
 class AdminOrdersScreen extends StatefulWidget {
@@ -43,7 +43,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   void _kirimTiketKonfirmasi(Map<String, dynamic> item) async {
     String formattedPhone = _formatNomorWA(item['nomor_wa']);
 
-    // [BARU] Formatter untuk WhatsApp
+    // Formatter untuk WhatsApp
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID', 
       symbol: 'Rp ', 
@@ -64,7 +64,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       "💺 *Kursi:* ${item['nomor_kursi'] ?? 'Belum Pilih'} \n"
       "📍 *Titik Jemput:* \n${item['lokasi_jemput'] ?? '-'} \n"
       "-----------------------------------------\n"
-      // [UBAH DISINI] Menggunakan formatter di pesan WA
+      // formatter di pesan WA
       "💰 *STATUS:* LUNAS (${currencyFormatter.format(item['harga'])})\n\n"
       "Harap tunjukkan pesan ini kepada kru saat boarding.\n"
       "Mohon hadir 30 menit sebelum keberangkatan.\n\n"
