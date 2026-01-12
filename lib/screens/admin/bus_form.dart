@@ -210,7 +210,7 @@ class _BusFormScreenState extends State<BusFormScreen> {
                 Expanded(child: _buildInput("Jml Kursi", _kursiController, Icons.event_seat, isNumber: true)),
               ],
             ),
-
+            // Multi-Select
             const SizedBox(height: 10),
             _buildSectionTitle("Fasilitas"),
             Wrap(
