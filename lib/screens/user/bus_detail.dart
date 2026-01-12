@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // [BARU] Import library intl
+import 'package:intl/intl.dart'; // [PENTING] Library format uang
 import '../../models/bus_model.dart';
 import 'booking_form.dart'; 
 
@@ -10,21 +10,26 @@ class BusDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // [BARU] Membuat formatter Rupiah
+    // --- 1. SETUP FORMATTER RUPIAH ---
+    // Mengubah angka 150000 menjadi "Rp 150.000"
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID', 
       symbol: 'Rp ', 
       decimalDigits: 0
     );
 
+    // --- 2. UBAH STRING "AC,WIFI,TV" JADI LIST ---
+    // Memisahkan teks fasilitas berdasarkan koma agar bisa dibuat kotak-kotak (Chips)
     List<String> fasilitas = bus.fasilitas.isNotEmpty ? bus.fasilitas.split(',') : [];
 
     return Scaffold(
+      // --- 3. SCROLL VIEW DENGAN EFEK HEADER ---
       body: CustomScrollView(
         slivers: [
+          // HEADER GAMBAR YANG BISA MENYUSUT (Parallax)
           SliverAppBar(
             expandedHeight: 250,
-            pinned: true,
+            pinned: true, // Header tetap nempel di atas saat scroll
             backgroundColor: const Color(0xFF1BA0E2),
             foregroundColor: Colors.white,
             flexibleSpace: FlexibleSpaceBar(
@@ -35,15 +40,18 @@ class BusDetailScreen extends StatelessWidget {
                   shadows: [Shadow(color: Colors.black, blurRadius: 10)]
                 )
               ),
-              background: _buildHeaderImage(bus.fotoUrl), 
+              background: _buildHeaderImage(bus.fotoUrl), // Gambar Bus
             ),
           ),
+
+          // BODY KONTEN DETAIL
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // --- INFORMASI UTAMA (RUTE & HARGA) ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +65,7 @@ class BusDetailScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // [UBAH DISINI] Menggunakan formatter
+                      // Tampilkan Harga
                       Text(
                         currencyFormatter.format(bus.harga), 
                         style: const TextStyle(fontSize: 20, color: Color(0xFF1BA0E2), fontWeight: FontWeight.bold)
@@ -66,6 +74,7 @@ class BusDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
+                  // --- INFO JAM KEBERANGKATAN ---
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
@@ -88,11 +97,13 @@ class BusDetailScreen extends StatelessWidget {
 
                   const Divider(height: 30),
 
+                  // --- DESKRIPSI ---
                   const Text("Deskripsi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 5),
                   Text(bus.deskripsi, style: TextStyle(color: Colors.grey[700], height: 1.5)),
                   const SizedBox(height: 20),
 
+                  // --- FASILITAS (TAMPILAN CHIPS) ---
                   const Text("Fasilitas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 10),
                   Wrap(
@@ -107,6 +118,7 @@ class BusDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
+                  // --- TITIK JEMPUT ---
                   const Text("Titik Jemput", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 5),
                   Row(
@@ -117,7 +129,7 @@ class BusDetailScreen extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 80), 
+                  const SizedBox(height: 80), // Ruang kosong agar tidak tertutup tombol bawah
                 ],
               ),
             ),
@@ -125,13 +137,14 @@ class BusDetailScreen extends StatelessWidget {
         ],
       ),
       
+      // --- TOMBOL PESAN (DI BAWAH LAYAR) ---
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white, 
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Jika error gunakan .withValues(alpha: 0.1) untuk Flutter terbaru
+              color: Colors.black.withOpacity(0.1), 
               blurRadius: 10, 
               offset: const Offset(0, -5)
             )
@@ -145,6 +158,7 @@ class BusDetailScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
+              // Pindah ke Form Pemesanan
               Navigator.push(context, MaterialPageRoute(builder: (_) => BookingFormScreen(bus: bus)));
             },
             child: const Text("PESAN TIKET SEKARANG", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
@@ -154,6 +168,7 @@ class BusDetailScreen extends StatelessWidget {
     );
   }
 
+  // --- LOGIC CEK GAMBAR (INTERNET VS LOKAL) ---
   Widget _buildHeaderImage(String? path) {
     if (path == null || path.isEmpty) {
       return Container(

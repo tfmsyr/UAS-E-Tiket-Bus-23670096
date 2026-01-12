@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../../database/db_helper.dart';
 import '../../models/bus_model.dart';
@@ -13,12 +14,13 @@ class BookingFormScreen extends StatefulWidget {
 class _BookingFormScreenState extends State<BookingFormScreen> {
   final _formKey = GlobalKey<FormState>();
   
+  // Controller untuk mengambil teks dari inputan user
   final _namaController = TextEditingController();
   final _waController = TextEditingController();
   final _tanggalController = TextEditingController();
 
-  String? _selectedLokasi;
-  String? _selectedSeat; 
+  String? _selectedLokasi; // Menyimpan lokasi yang dipilih dari dropdown
+  String? _selectedSeat;   // Menyimpan nomor kursi yang dipilih (misal: A1)
   List<String> _titikJemputOptions = [];
 
   @override
@@ -27,6 +29,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     _loadData();
   }
 
+  // Menyiapkan opsi titik jemput (memisahkan string koma menjadi List)
   void _loadData() {
     if (widget.bus.titikJemput.isNotEmpty) {
       _titikJemputOptions = widget.bus.titikJemput.split(',').map((e) => e.trim()).toList();
@@ -35,6 +38,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
+  // Fungsi memunculkan Kalender (Date Picker)
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -42,6 +46,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       firstDate: DateTime.now(), 
       lastDate: DateTime(2030),
       builder: (context, child) {
+        // Mengubah tema warna kalender agar sesuai aplikasi
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(primary: Color(0xFF1BA0E2)),
@@ -57,8 +62,12 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
+  // Fungsi Simpan Booking ke Database
   void _submitBooking() async {
+    // 1. Cek validasi form (Nama, WA, Tanggal, Lokasi harus isi)
     if (_formKey.currentState!.validate()) {
+      
+      // 2. Cek validasi manual untuk Kursi
       if (_selectedSeat == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("⚠️ Silakan pilih kursi terlebih dahulu!"), backgroundColor: Colors.red)
@@ -66,6 +75,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         return;
       }
 
+      // 3. Siapkan data untuk disimpan
       Map<String, dynamic> bookingData = {
         'nama_bus': widget.bus.namaBus,
         'rute': widget.bus.rute,
@@ -78,13 +88,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         'nomor_kursi': _selectedSeat, 
       };
 
+      // 4. Panggil fungsi createBooking di DatabaseHelper
       await DatabaseHelper.instance.createBooking(bookingData);
       
       if (!mounted) return;
 
+      // 5. Siapkan data tiket untuk ditampilkan di layar sukses
       Map<String, dynamic> ticketData = Map.from(bookingData);
       ticketData['jam_berangkat'] = widget.bus.jamBerangkat; 
 
+      // 6. Pindah ke layar sukses (PushReplacement agar tidak bisa back ke form)
       Navigator.pushReplacement(
         context, 
         MaterialPageRoute(builder: (_) => BookingSuccessScreen(bookingData: ticketData))
@@ -94,6 +107,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Hitung jumlah baris kursi (Total kursi dibagi 4 kolom)
     int totalRows = (widget.bus.jumlahKursi / 4).ceil();
 
     return Scaffold(
@@ -111,6 +125,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // --- CARD 1: DATA PENUMPANG ---
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -125,6 +140,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       _buildInput(_namaController, "Nama Lengkap", Icons.person),
                       _buildInput(_waController, "Nomor WhatsApp", Icons.phone, isNumber: true),
                       
+                      // Input Tanggal (Read Only karena pakai DatePicker)
                       TextFormField(
                         controller: _tanggalController,
                         readOnly: true,
@@ -140,6 +156,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       ),
                       const SizedBox(height: 15),
 
+                      // Dropdown Titik Jemput
                       DropdownButtonFormField<String>(
                         value: _selectedLokasi,
                         decoration: InputDecoration(
@@ -160,6 +177,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
               const SizedBox(height: 25),
 
+              // --- CARD 2: PEMILIHAN KURSI ---
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -172,6 +190,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       Text("Total Kapasitas: ${widget.bus.jumlahKursi} Kursi", style: const TextStyle(color: Colors.grey)),
                       const Divider(),
                       
+                      // Legenda Warna Kursi
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -184,6 +203,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       ),
                       const SizedBox(height: 20),
 
+                      // Penanda Supir
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(8),
@@ -202,6 +222,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       ),
                       const SizedBox(height: 15),
 
+                      // Grid Kursi (Looping Baris)
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
@@ -221,6 +242,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
               const SizedBox(height: 30),
 
+              // --- TOMBOL KONFIRMASI ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -242,6 +264,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     );
   }
 
+  // Widget pembangun baris kursi (2 kiri - Gang - 2 kanan)
   Widget _buildRowSeat(int row, int maxSeats) {
     int start = (row - 1) * 4;
     return Padding(
@@ -257,6 +280,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             ],
           ),
           
+          // Gang Jalan (Nomor Baris)
           Container(
             width: 30,
             alignment: Alignment.center,
@@ -275,8 +299,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     );
   }
 
+  // Widget Item Kursi Satuan
   Widget _seatItem(String label, int index, int max) {
-    if (index > max) return const SizedBox(width: 45, height: 45);
+    if (index > max) return const SizedBox(width: 45, height: 45); // Jika kursi melebihi kapasitas
     
     bool selected = _selectedSeat == label;
 
@@ -292,9 +317,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             color: selected ? const Color(0xFF1BA0E2) : Colors.grey.shade300,
             width: 2
           ),
+          // Catatan: Jika Flutter versi lama error di 'withValues', ganti jadi .withOpacity(0.3)
           boxShadow: selected ? [
             BoxShadow(
-              color: Colors.blue.withValues(alpha: 0.3), // UPDATED: withValues
+              color: Colors.blue.withValues(alpha: 0.3), 
               blurRadius: 8, 
               spreadRadius: 1
             )
@@ -349,6 +375,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   }
 }
 
+// ---------------------------------------------------------
+// LAYAR TIKET SUKSES (Muncul setelah booking berhasil)
+// ---------------------------------------------------------
 class BookingSuccessScreen extends StatelessWidget {
   final Map<String, dynamic> bookingData;
 
@@ -356,6 +385,7 @@ class BookingSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Membuat ID Booking palsu yang unik berdasarkan waktu
     final String bookingId = "TFM-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}";
     String hargaFormatted = double.parse(bookingData['harga'].toString()).toStringAsFixed(0);
     String jamReal = bookingData['jam_berangkat'] ?? "-";
@@ -381,6 +411,7 @@ class BookingSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
+              // --- TAMPILAN TIKET ELEKTRONIK ---
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -388,7 +419,7 @@ class BookingSuccessScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2), // UPDATED: withValues
+                      color: Colors.black.withValues(alpha: 0.2), 
                       blurRadius: 15, 
                       offset: const Offset(0, 10)
                     )
@@ -417,6 +448,7 @@ class BookingSuccessScreen extends StatelessWidget {
                     ),
                     const Divider(height: 1, thickness: 1),
 
+                    // Body Tiket
                     Padding(
                       padding: const EdgeInsets.all(25),
                       child: Column(
@@ -443,6 +475,7 @@ class BookingSuccessScreen extends StatelessWidget {
                       ),
                     ),
 
+                    // Footer Tiket (QR & Total)
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[50],
@@ -472,6 +505,7 @@ class BookingSuccessScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
 
+              // Tombol Kembali
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -481,6 +515,7 @@ class BookingSuccessScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: () {
+                    // Kembali ke halaman paling awal (Beranda)
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   child: const Text("KEMBALI KE BERANDA", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),

@@ -1,3 +1,4 @@
+// --- IMPORT LIBRARY & HALAMAN ---
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
@@ -13,6 +14,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  // --- VARIABEL ANIMASI ---
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -20,6 +22,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
 
+    // --- SETUP ANIMASI BERDENYUT ---
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000), 
@@ -32,31 +35,34 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       ),
     );
 
-    _controller.repeat(reverse: true);
-    _checkSession();
+    _controller.repeat(reverse: true); // Animasi berulang (membesar-mengecil)
+    _checkSession(); // Jalankan pengecekan login
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller.dispose(); // Mencegah kebocoran memori
     super.dispose();
   }
 
+  // --- LOGIC CEK STATUS LOGIN (SESSION) ---
   Future<void> _checkSession() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 3)); // Tahan logo selama 3 detik
 
     final prefs = await SharedPreferences.getInstance();
-    final role = prefs.getString('role');
+    final role = prefs.getString('role'); // Ambil data "role" dari HP
 
     if (!mounted) return;
     
-    _controller.stop();
+    _controller.stop(); // Hentikan animasi sebelum pindah
 
+    // Cek apakah Admin, User Biasa, atau Belum Login
     if (role == 'admin') {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminHomeScreen()));
     } else if (role == 'user') {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const UserHomeScreen()));
     } else {
+      // Jika belum login, arahkan ke Login Screen dengan efek Fade
       Navigator.pushReplacement(
         context, 
         PageRouteBuilder(
@@ -76,6 +82,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       body: Container(
         width: double.infinity,
         height: double.infinity,
+        // --- BACKGROUND GRADASI BIRU ---
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -88,14 +95,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           ),
         ),
         child: Center(
+          // --- PENERAPAN ANIMASI PADA LOGO ---
           child: ScaleTransition(
             scale: _scaleAnimation,
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                // --- EFEK CAHAYA (GLOW) ---
                 boxShadow: [
                   BoxShadow(
-                    // UPDATED: Menggunakan withValues pengganti withOpacity
                     color: Colors.white.withValues(alpha: 0.3),
                     blurRadius: 40,
                     spreadRadius: 5,

@@ -1,4 +1,4 @@
-import 'dart:ui'; // Penting untuk ImageFilter
+import 'dart:ui'; 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../database/db_helper.dart';
@@ -15,24 +15,49 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
-  bool _isObscure = true;
+  
+  bool _isObscure = true;   // Untuk menyembunyikan password
+  bool _isLoading = false;  // Untuk status loading saat login diproses
 
+  // Fungsi Login
   void _login() async {
+    // 1. Validasi Input Kosong
     if (_userController.text.isEmpty || _passController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Harap isi Username dan Password')));
+        const SnackBar(
+          content: Text('Harap isi Username dan Password'),
+          backgroundColor: Colors.orange,
+        )
+      );
       return;
     }
 
-    final user = await DatabaseHelper.instance
-        .login(_userController.text, _passController.text);
+    // 2. Set status loading true (tombol jadi loading)
+    setState(() {
+      _isLoading = true;
+    });
 
+    // 3. Cek ke Database (Simulasi delay dikit biar kerasa loadingnya jika perlu)
+    final user = await DatabaseHelper.instance.login(
+      _userController.text, 
+      _passController.text
+    );
+
+    // 4. Cek Hasil
     if (user != null) {
+      // Login Berhasil -> Simpan Sesi
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('role', user['role']);
       await prefs.setString('username', user['username']);
 
       if (!mounted) return;
+
+      // Reset loading (opsional karena mau pindah layar)
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Navigasi sesuai Role
       if (user['role'] == 'admin') {
         Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (_) => const AdminHomeScreen()));
@@ -41,12 +66,19 @@ class _LoginScreenState extends State<LoginScreen> {
             context, MaterialPageRoute(builder: (_) => const UserHomeScreen()));
       }
     } else {
+      // Login Gagal
       if (!mounted) return;
+      
+      setState(() {
+        _isLoading = false; // Matikan loading
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Username atau Password Salah!'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -55,48 +87,51 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      // resizeToAvoidBottomInset: false, // Hapus ini agar keyboard tidak menutupi input
       body: Stack(
         children: [
+          // --- 1. BACKGROUND GRADIENT ---
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF29B6F6),
-                  Color(0xFF039BE5),
-                  Color(0xFF0277BD),
+                  Color(0xFF29B6F6), // Light Blue
+                  Color(0xFF039BE5), // Medium Blue
+                  Color(0xFF0277BD), // Dark Blue
                 ],
               ),
             ),
           ),
+
+          // --- 2. CONTENT (CENTERED) ---
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // 
+                  // WIDGET KACA (GLASSMORPHISM)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(20),
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(
-                          sigmaX: 8, sigmaY: 8), // Blur halus
+                      // Filter Blur dari dart:ui
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), 
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24, vertical: 30),
                         decoration: BoxDecoration(
-                          // PERBAIKAN: Menggunakan withValues(alpha: ...)
+                          // Transparansi background kaca
                           color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            // PERBAIKAN: Menggunakan withValues(alpha: ...)
                             color: Colors.white.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              // PERBAIKAN: Menggunakan withValues(alpha: ...)
                               color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 15,
                               offset: const Offset(0, 5),
@@ -106,13 +141,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            // Logo
                             Image.asset(
                               'assets/images/logo_bus.png',
-                              width: 120,
-                              height: 120,
+                              width: 100,
+                              height: 100,
                               color: Colors.white,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.directions_bus, size: 80, color: Colors.white);
+                              },
                             ),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 10),
                             const Text(
                               "TFMSYR TRANS",
                               style: TextStyle(
@@ -134,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 30),
 
-                            // FORM INPUT (Style: Frosted Ice)
+                            // FORM INPUT
                             _buildGlassTextField(
                               controller: _userController,
                               icon: Icons.person_outline_rounded,
@@ -150,26 +189,32 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 30),
 
+                            // TOMBOL LOGIN
                             SizedBox(
                               width: double.infinity,
                               height: 50,
                               child: ElevatedButton(
-                                onPressed: _login,
+                                onPressed: _isLoading ? null : _login, // Disable jika loading
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.white,
-                                  foregroundColor:
-                                      const Color(0xFF0277BD), // Teks Biru
+                                  foregroundColor: const Color(0xFF0277BD),
+                                  disabledBackgroundColor: Colors.white.withValues(alpha: 0.7),
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                 ),
-                                child: const Text(
-                                  "MASUK",
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
+                                child: _isLoading 
+                                  ? const SizedBox(
+                                      height: 20, width: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2)
+                                    )
+                                  : const Text(
+                                      "MASUK",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
                               ),
                             ),
                           ],
@@ -177,7 +222,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  // --- END GLASS CARD ---
                 ],
               ),
             ),
@@ -187,6 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Widget Helper untuk Text Field gaya Kaca
   Widget _buildGlassTextField({
     required TextEditingController controller,
     required IconData icon,
@@ -195,7 +240,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        // PERBAIKAN: Menggunakan withValues(alpha: ...)
         color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: Colors.white30),

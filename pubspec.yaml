@@ -1,28 +1,40 @@
-name: tfmsyr_trans
-description: Aplikasi Booking Bus Jawa Bali
-publish_to: 'none'
-version: 1.0.0+1
+# --- IDENTITAS APLIKASI ---
+name: tfmsyr_trans            # Nama teknis project
+description: Aplikasi Booking Bus Jawa Bali # Penjelasan fungsi app
+publish_to: 'none'            # Project privat (tidak di-publish ke publik)
+version: 1.0.0+1              # Versi aplikasi (1.0.0) & kode update (+1)
 
+# --- SYARAT SISTEM ---
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'       # Wajib pakai Dart versi 3 (Null Safety)
 
+# --- FITUR TAMBAHAN (LIBRARY) ---
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: ^2.3.0
-  path: ^1.9.0
-  shared_preferences: ^2.2.0
-  url_launcher: ^6.2.1
-  intl: ^0.18.1
-  image_picker: ^1.0.7
+  sqflite: ^2.3.0             # Database lokal (simpan data offline)
+  path: ^1.9.0                # Pencari lokasi file di HP
+  shared_preferences: ^2.2.0  # Simpan data ringan (status login/setting)
+  url_launcher: ^6.2.1        # Buka link, telepon, atau maps
+  intl: ^0.18.1               # Format Rupiah & Tanggal
+  image_picker: ^1.0.7        # Akses Kamera & Galeri (upload bukti bayar)
+  flutter_launcher_icons: ^0.13.1 # Alat pembuat icon aplikasi
 
+# --- ALAT BANTU DEVELOPER ---
 dev_dependencies:
-  flutter_test:
+  flutter_test:               
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^2.0.0       
 
+# --- PENGATURAN TAMPILAN & ASET ---
 flutter:
-  uses-material-design: true
+  uses-material-design: true  
   assets:
-    - assets/images/logo_bus.png
-    
+    - assets/images/logo_bus.png 
+
+# --- PENGATURAN ICON APLIKASI ---
+flutter_launcher_icons:
+  android: "launcher_icon"    
+  ios: true                   
+  image_path: "assets/icon/icon.png" 
+  min_sdk_android: 21        

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart'; // [BARU] Tambahkan import ini
+import 'package:intl/intl.dart'; 
 import '../../database/db_helper.dart';
 import '../../models/bus_model.dart';
 import '../auth/login_screen.dart';
@@ -15,8 +15,9 @@ class UserHomeScreen extends StatefulWidget {
 }
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
-  List<Bus> buses = [];
-  List<Bus> filteredBuses = [];
+  // --- STATE / VARIABEL DATA ---
+  List<Bus> buses = [];         // Menyimpan semua data bus dari Database
+  List<Bus> filteredBuses = []; // Menyimpan data bus yang sedang ditampilkan (hasil search)
   String username = "";
   TextEditingController searchController = TextEditingController();
   bool isLoading = true;
@@ -24,8 +25,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshBuses();
-    _loadUser();
+    _refreshBuses(); // Ambil data bus saat aplikasi dibuka
+    _loadUser();     // Ambil nama user
   }
 
   Future<void> _loadUser() async {
@@ -33,23 +34,26 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     setState(() => username = prefs.getString('username') ?? "User");
   }
 
+  // --- FUNGSI AMBIL DATA DARI DATABASE ---
   Future<void> _refreshBuses() async {
     setState(() => isLoading = true);
     final data = await DatabaseHelper.instance.readAllBuses();
     if (mounted) {
       setState(() {
         buses = data;
-        filteredBuses = data;
+        filteredBuses = data; // Awalnya tampilkan semua data
         isLoading = false;
       });
     }
   }
 
+  // --- LOGIC PENCARIAN (SEARCH) ---
   void _runFilter(String keyword) {
     List<Bus> results = [];
     if (keyword.isEmpty) {
-      results = buses;
+      results = buses; // Jika kosong, tampilkan semua
     } else {
+      // Filter berdasarkan Nama, Rute, atau Titik Jemput
       results = buses
           .where((bus) =>
               bus.namaBus.toLowerCase().contains(keyword.toLowerCase()) ||
@@ -60,12 +64,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     setState(() => filteredBuses = results);
   }
 
+  // --- LOGIC LOGOUT ---
   Future<void> _handleLogout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await prefs.clear(); // Hapus sesi login
 
     if (!mounted) return;
 
+    // Kembali ke halaman Login
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -74,7 +80,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // [BARU] Membuat formatter mata uang Rupiah
+    // --- SETUP FORMATTER RUPIAH ---
+    // Contoh: 150000 menjadi "Rp 150.000"
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID', 
       symbol: 'Rp ', 
@@ -97,7 +104,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       ),
       body: Column(
         children: [
-          // HEADER AREA
+          // --- HEADER & SEARCH BAR ---
           Container(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
             decoration: const BoxDecoration(
@@ -124,9 +131,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   style: TextStyle(color: Colors.white70),
                 ),
                 const SizedBox(height: 20),
+                // Input Pencarian
                 TextField(
                   controller: searchController,
-                  onChanged: _runFilter,
+                  onChanged: _runFilter, // Panggil fungsi filter saat mengetik
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -144,7 +152,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           ),
 
-          // LIST BUS 
+          // --- DAFTAR BUS (GRID VIEW) ---
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -159,11 +167,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           ],
                         ),
                       )
-                    : GridView.builder(
+                    : GridView.builder( // Tampilan kotak-kotak (Grid)
                         padding: const EdgeInsets.all(15),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.65,
+                          crossAxisCount: 2, // 2 Kolom ke samping
+                          childAspectRatio: 0.65, // Rasio tinggi-lebar kartu
                           crossAxisSpacing: 15,
                           mainAxisSpacing: 15,
                         ),
@@ -171,8 +179,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         itemBuilder: (context, index) {
                           final bus = filteredBuses[index];
 
+                          // --- KARTU ITEM BUS ---
                           return GestureDetector(
                             onTap: () {
+                              // Pindah ke Halaman Detail saat diklik
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => BusDetailScreen(bus: bus)),
@@ -184,7 +194,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                 borderRadius: BorderRadius.circular(15),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.1), // Menggunakan withOpacity agar aman untuk versi flutter lama/baru
+                                    color: Colors.grey.withOpacity(0.1),
                                     blurRadius: 5,
                                     spreadRadius: 2,
                                   )
@@ -193,7 +203,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // FOTO BUS
+                                  // --- FOTO BUS ---
                                   Expanded(
                                     flex: 3,
                                     child: ClipRRect(
@@ -208,7 +218,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                     ),
                                   ),
                                   
-                                  // INFO BUS
+                                  // --- INFO BUS (NAMA, JAM, HARGA) ---
                                   Expanded(
                                     flex: 3,
                                     child: Padding(
@@ -229,7 +239,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                               ),
                                               const SizedBox(height: 4),
 
-                                              // Jam
+                                              // Jam Berangkat
                                               Row(
                                                 children: [
                                                   const Icon(Icons.access_time, size: 12, color: Colors.blueAccent),
@@ -260,7 +270,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                             ],
                                           ),
 
-                                          // Harga [BAGIAN YANG DIPERBAIKI]
+                                          // Harga (Format Rupiah)
                                           Text(
                                             currencyFormatter.format(bus.harga),
                                             style: const TextStyle(
@@ -287,6 +297,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
+  // --- HELPER MENAMPILKAN GAMBAR ---
+  // Fungsi ini mengecek apakah gambar berasal dari Internet (URL) atau File Lokal HP
   Widget _buildBusImage(String? path) {
     if (path == null || path.isEmpty) {
       return Container(
@@ -296,12 +308,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     }
 
     if (path.startsWith('http')) {
+      // Jika link internet
       return Image.network(
         path,
         fit: BoxFit.cover,
         errorBuilder: (ctx, _, __) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
       );
     } else {
+      // Jika file lokal (hasil upload admin)
       return Image.file(
         File(path),
         fit: BoxFit.cover,
